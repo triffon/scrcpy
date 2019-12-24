@@ -126,10 +126,14 @@ enum event_result {
 };
 
 static enum event_result
-handle_event(SDL_Event *event, bool control) {
+handle_event(SDL_Event *event, bool control, bool quit_stream) {
     switch (event->type) {
         case EVENT_STREAM_STOPPED:
             LOGD("Video stream stopped");
+            // in case the user has selected to quit the stream after start
+            // we should continue working if the video stream stops
+            if (quit_stream)
+              return EVENT_RESULT_CONTINUE;
             return EVENT_RESULT_STOPPED_BY_EOS;
         case SDL_QUIT:
             LOGD("User requested to quit");
@@ -201,7 +205,7 @@ handle_event(SDL_Event *event, bool control) {
 }
 
 static bool
-event_loop(bool display, bool control) {
+event_loop(bool display, bool control, bool quit_stream) {
     (void) display;
 #ifdef CONTINUOUS_RESIZING_WORKAROUND
     if (display) {
@@ -210,7 +214,7 @@ event_loop(bool display, bool control) {
 #endif
     SDL_Event event;
     while (SDL_WaitEvent(&event)) {
-        enum event_result result = handle_event(&event, control);
+      enum event_result result = handle_event(&event, control, quit_stream);
         switch (result) {
             case EVENT_RESULT_STOPPED_BY_USER:
                 return true;
@@ -367,6 +371,11 @@ scrcpy(const struct scrcpy_options *options) {
 
     stream_init(&stream, server.video_socket, dec, rec);
 
+    if (options->quit_stream) {
+      LOGI("Control-only mode");
+      stream.quit_stream = true;
+    }
+
     // now we consumed the header values, the socket receives the video stream
     // start the stream
     if (!stream_start(&stream)) {
@@ -420,7 +429,7 @@ scrcpy(const struct scrcpy_options *options) {
 
     input_manager.prefer_text = options->prefer_text;
 
-    ret = event_loop(options->display, options->control);
+    ret = event_loop(options->display, options->control, options->quit_stream);
     LOGD("quit...");
 
     screen_destroy(&screen);

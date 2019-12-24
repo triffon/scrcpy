@@ -184,6 +184,7 @@ stream_push_packet(struct stream *stream, AVPacket *packet) {
 static int
 run_stream(void *data) {
     struct stream *stream = data;
+    int packets = 0;
 
     AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
     if (!codec) {
@@ -225,6 +226,11 @@ run_stream(void *data) {
     stream->parser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
 
     for (;;) {
+
+        if (packets > 1 && stream->quit_stream) {
+          break;
+        }
+
         AVPacket packet;
         bool ok = stream_recv_packet(stream, &packet);
         if (!ok) {
@@ -238,6 +244,8 @@ run_stream(void *data) {
             // cannot process packet (error already logged)
             break;
         }
+
+        packets++;
     }
 
     LOGD("End of frames");

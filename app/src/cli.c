@@ -62,6 +62,10 @@ scrcpy_print_usage(const char *arg0) {
         "        Set the TCP port the client listens on.\n"
         "        Default is %d.\n"
         "\n"
+        "    -q, --quit-stream\n"
+        "        Stops receiving stream (almost) immediately after start.\n"
+        "        Can be used as a \"control only\" mode.\n"
+        "\n"
         "    --prefer-text\n"
         "        Inject alpha characters and space as text events instead of\n"
         "        key events.\n"
@@ -355,6 +359,7 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
         {"no-display",            no_argument,       NULL, 'N'},
         {"port",                  required_argument, NULL, 'p'},
         {"push-target",           required_argument, NULL, OPT_PUSH_TARGET},
+        {"quit-stream",           no_argument,       NULL, 'q'},
         {"record",                required_argument, NULL, 'r'},
         {"record-format",         required_argument, NULL, OPT_RECORD_FORMAT},
         {"render-expired-frames", no_argument,       NULL,
@@ -379,7 +384,7 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     optind = 0; // reset to start from the first argument in tests
 
     int c;
-    while ((c = getopt_long(argc, argv, "b:c:fF:hm:nNp:r:s:StTv", long_options,
+    while ((c = getopt_long(argc, argv, "b:c:fF:hm:nNqp:r:s:StTv", long_options,
                             NULL)) != -1) {
         switch (c) {
             case 'b':
@@ -427,6 +432,9 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
                 if (!parse_port(optarg, &opts->port)) {
                     return false;
                 }
+                break;
+            case 'q':
+                opts->quit_stream = true;
                 break;
             case 'r':
                 opts->record_filename = optarg;

@@ -24,6 +24,8 @@ struct stream {
     // packet is available
     bool has_pending;
     AVPacket pending;
+    // flag whether stream should quit after the first two packets
+    bool quit_stream;
 };
 
 void
