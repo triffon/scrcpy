@@ -135,7 +135,7 @@ public class ScreenEncoder implements Device.RotationListener {
     }
 
     private static MediaCodec createCodec() throws IOException {
-        return MediaCodec.createEncoderByType("video/avc");
+        return MediaCodec.createByCodecName("OMX.google.h264.encoder");
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
